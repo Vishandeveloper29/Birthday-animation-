@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+      name="viewport"
+    />
+    <title>Dhvani — A Universe of Sound</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600;9..144,700&family=Space+Grotesk:wght@400;500;700&family=Inter:wght@400;500&family=Noto+Sans+Devanagari:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              void: '#0a0612',
+              deep: '#170f28',
+              primary: '#9333ea',
+              magenta: '#ec4899',
+              gold: '#fbbf24',
+              cyan: '#22d3ee',
+              lilac: '#c9b8ec'
+            },
+            fontFamily: {
+              display: ['Fraunces', 'serif'],
+              mono: ['Space Grotesk', 'sans-serif'],
+              body: ['Inter', 'sans-serif'],
+              deva: ['Noto Sans Devanagari', 'sans-serif']
+            },
+            animation: {
+              float: 'float 6s ease-in-out infinite',
+              'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+            },
+            keyframes: {
+              float: {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-18px)' }
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      * { -webkit-tap-highlight-color: transparent; }
+      html, body {
+        margin: 0;
+        overflow: hidden;
+        height: 100dvh;
+        width: 100vw;
+        touch-action: none;
+        background:
+          radial-gradient(ellipse at 18% 15%, rgba(147, 51, 234, 0.28), transparent 55%),
+          radial-gradient(ellipse at 82% 75%, rgba(236, 72, 153, 0.20), transparent 55%),
+          radial-gradient(ellipse at 50% 100%, rgba(34, 211, 238, 0.10), transparent 60%),
+          #0a0612;
+      }
+      canvas {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        touch-action: none;
+      }
+      .ui-layer { position: relative; z-index: 10; pointer-events: none; }
+      .interactive-element {
+        pointer-events: auto;
+        backdrop-filter: blur(8px);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+      }
+      .typewriter::after {
+        content: "|";
+        animation: blink 1s step-end infinite;
+        color: #fbbf24;
+      }
+      @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+      .orb-glow {
+        box-shadow: 0 0 30px rgba(147, 51, 234, 0.4), inset 0 0 20px rgba(255, 255, 255, 0.15);
+      }
+      .orb-glow:active, .orb-glow:hover {
+        box-shadow: 0 0 55px var(--orb-color, #9333ea), inset 0 0 30px rgba(255, 255, 255, 0.35);
+        transform: scale(1.12);
+      }
+      .text-dynamic { font-size: clamp(2.1rem, 9vw, 4.2rem); }
+      .progress-dot { transition: all 0.5s cubic-bezier(0.4,0,0.2,1); }
+      .safe-b { padding-bottom: env(safe-area-inset-bottom, 0px); }
+      .safe-t { padding-top: env(safe-area-inset-top, 0px); }
+      .safe-r { padding-right: env(safe-area-inset-right, 0px); }
+      .safe-l { padding-left: env(safe-area-inset-left, 0px); }
+      #wish-orb { transition: transform 0.08s linear, box-shadow 0.3s ease; }
+      @media (prefers-reduced-motion: reduce) {
+        .animate-float, .animate-pulse-slow { animation: none !important; }
+      }
+    </style>
+  </head>
+  <body class="text-white font-body h-screen w-screen selection:bg-primary selection:text-white">
+    <canvas id="universe"></canvas>
+
+    <!-- Main narrative text -->
+    <div class="ui-layer flex flex-col items-center justify-center h-full w-full p-6">
+      <div
+        class="text-center max-w-4xl flex flex-col items-center gap-6 transition-opacity duration-1000 w-full"
+        id="text-container"
+      >
+        <p
+          class="font-deva text-2xl sm:text-3xl text-cyan/80 tracking-wide min-h-[1.4em] opacity-0 transition-opacity duration-1000"
+          id="deva-text"
+        ></p>
+        <h1
+          class="font-display text-dynamic lg:text-7xl font-medium tracking-tight leading-tight text-white drop-shadow-[0_0_20px_rgba(147,51,234,0.55)] min-h-[1.3em] break-words w-full"
+          id="main-heading"
+        ></h1>
+        <p
+          class="text-lilac text-base sm:text-lg md:text-xl font-body font-normal leading-relaxed tracking-wide max-w-2xl min-h-[1.5em] px-4"
+          id="sub-text"
+        ></p>
+      </div>
+
+      <button
+        class="interactive-element mt-12 bg-primary/20 active:bg-primary/40 md:hover:bg-primary text-white border border-primary/50 px-10 py-4 md:px-8 md:py-3 rounded-full text-base md:text-sm font-mono font-bold tracking-[0.1em] uppercase hidden opacity-0 transition-all duration-700 shadow-[0_0_20px_rgba(147,51,234,0.3)] md:hover:shadow-[0_0_30px_#9333ea]"
+        id="start-btn"
+      >
+        Wake the Silence
+      </button>
+
+      <!-- Wish moment (final scene) -->
+      <div class="hidden opacity-0 transition-opacity duration-1000 flex-col items-center mt-10" id="wish-container">
+        <button
+          class="interactive-element w-24 h-24 md:w-28 md:h-28 rounded-full orb-glow flex items-center justify-center bg-gradient-to-br from-gold to-primary select-none"
+          id="wish-orb"
+          style="--orb-color:#fbbf24"
+          aria-label="Hold to make a wish"
+        >
+          <span class="material-symbols-outlined text-3xl md:text-4xl">auto_awesome</span>
+        </button>
+        <p class="font-mono text-xs text-lilac/80 mt-4 tracking-widest uppercase" id="wish-hint">Press &amp; hold to make a wish</p>
+      </div>
+
+      <button
+        class="interactive-element mt-8 bg-white/5 active:bg-white/15 md:hover:bg-white/15 text-white/80 border border-white/20 px-8 py-3 rounded-full text-xs font-mono font-bold tracking-[0.1em] uppercase hidden opacity-0 transition-all duration-700"
+        id="replay-btn"
+      >
+        Play the Universe Again
+      </button>
+    </div>
+
+    <!-- Memory orbs -->
+    <div
+      class="ui-layer absolute inset-0 flex items-center justify-center pointer-events-none hidden opacity-0 transition-opacity duration-1000"
+      id="orbs-container"
+    ></div>
+
+    <!-- Progress dots -->
+    <div class="ui-layer fixed bottom-6 left-1/2 -translate-x-1/2 flex gap-2.5 z-40 safe-b opacity-0 transition-opacity duration-1000" id="progress-dots">
+      <span class="progress-dot w-1.5 h-1.5 rounded-full bg-white/20"></span>
+      <span class="progress-dot w-1.5 h-1.5 rounded-full bg-white/20"></span>
+      <span class="progress-dot w-1.5 h-1.5 rounded-full bg-white/20"></span>
+      <span class="progress-dot w-1.5 h-1.5 rounded-full bg-white/20"></span>
+      <span class="progress-dot w-1.5 h-1.5 rounded-full bg-white/20"></span>
+      <span class="progress-dot w-1.5 h-1.5 rounded-full bg-white/20"></span>
+    </div>
+
+    <!-- Easter egg -->
+    <div class="ui-layer fixed bottom-6 right-6 z-50 safe-b safe-r">
+      <button
+        aria-label="Hidden note"
+        class="interactive-element w-10 h-10 md:w-8 md:h-8 rounded-full flex items-center justify-center text-lilac/30 active:text-gold md:hover:text-gold md:hover:scale-125 transition-all duration-300"
+        id="easter-egg"
+      >
+        <span class="material-symbols-outlined text-[20px] md:text-[16px]">music_note</span>
+      </button>
+      <div
+        class="absolute bottom-12 right-0 w-64 bg-[#1a1122]/95 backdrop-blur-md border border-primary/30 p-4 rounded-xl shadow-2xl transform translate-y-4 opacity-0 scale-95 pointer-events-none transition-all duration-300 origin-bottom-right"
+        id="easter-egg-msg"
+      >
+        <p class="text-xs text-lilac">You found a hidden note. 🎵 May this whole year play your favorite song.</p>
+      </div>
+    </div>
+
+    <!-- Ambient sound toggle -->
+    <div class="ui-layer fixed top-6 right-6 z-50 safe-t safe-r">
+      <button
+        class="interactive-element p-3 md:p-2 rounded-full bg-white/5 active:bg-white/10 md:hover:bg-white/10 text-white/50 active:text-cyan md:hover:text-cyan transition-colors"
+        id="ambient-btn"
+        aria-label="Toggle ambient sound"
+      >
+        <span class="material-symbols-outlined" id="ambient-icon">graphic_eq</span>
+      </button>
+    </div>
+
+    <script>
+(() => {
+  "use strict";
+
+  /* ---------------------------------------------------------
+     CONFIG
+  --------------------------------------------------------- */
+  let isMobile = window.innerWidth < 768;
+  const config = {
+    particleCount: isMobile ? 420 : 900,
+    colors: ["#9333ea", "#ec4899", "#ffffff", "#fbbf24", "#22d3ee"],
+    text: {
+      intro: "Before sound, there was only silence.",
+      introDeva: "",
+      arrival: "And in that silence, the universe waited for a reason to sing.",
+      name: "DHVANI",
+      nameSub: "the sound that becomes a universe",
+      nameDeva: "ध्वनि",
+      gravityTitle: "Resonance",
+      gravity: isMobile ? "Touch the dark. Feel it answer." : "Move closer. The universe leans in.",
+      memoriesTitle: "Echoes",
+      memories: "Every year leaves an echo. These are yours.",
+      climax: "Let it swell. Let it soar.",
+      finalTitle: "Happy Birthday, Dhvani",
+      finalSub: "May this year echo everything good you've given the world.",
+      wishGranted: "Your wish is already becoming a star."
+    },
+    messages: [
+      { title: "Grace", desc: "The calm in every room you enter.", icon: "spa" },
+      { title: "Radiance", desc: "A light that doesn't dim for anyone.", icon: "wb_sunny" },
+      { title: "Warmth", desc: "Kindness that finds its way back to you.", icon: "favorite" },
+      { title: "Wonder", desc: "A mind that never stops asking why.", icon: "auto_awesome" },
+      { title: "Melody", desc: "The rhythm only you carry.", icon: "music_note" }
+    ]
+  };
+
+  const state = {
+    scene: 0,
+    width: window.innerWidth,
+    height: window.innerHeight,
+    pointerX: -9999,
+    pointerY: -9999,
+    lastPointerType: "mouse",
+    orbsCollected: 0
+  };
+
+  /* ---------------------------------------------------------
+     DOM
+  --------------------------------------------------------- */
+  const canvas = document.getElementById("universe");
+  const ctx = canvas.getContext("2d", { alpha: false });
+  const mainHeading = document.getElementById("main-heading");
+  const subText = document.getElementById("sub-text");
+  const devaText = document.getElementById("deva-text");
+  const startBtn = document.getElementById("start-btn");
+  const orbsContainer = document.getElementById("orbs-container");
+  const easterEggBtn = document.getElementById("easter-egg");
+  const easterEggMsg = document.getElementById("easter-egg-msg");
+  const ambientBtn = document.getElementById("ambient-btn");
+  const ambientIcon = document.getElementById("ambient-icon");
+  const progressDots = document.querySelectorAll(".progress-dot");
+  const progressWrap = document.getElementById("progress-dots");
+  const wishContainer = document.getElementById("wish-container");
+  const wishOrb = document.getElementById("wish-orb");
+  const wishHint = document.getElementById("wish-hint");
+  const replayBtn = document.getElementById("replay-btn");
+
+  let particles = [];
+  let comets = [];
+  let bgStars = [];
+
+  /* ---------------------------------------------------------
+     AUDIO (Web Audio API — no external files)
+  --------------------------------------------------------- */
+  let audioCtx = null;
+  let ambientOn = false;
+  let ambientNodes = null;
+
+  function ensureAudio() {
+    if (!audioCtx) {
+      try {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      } catch (e) {
+        audioCtx = null;
+      }
+    }
+    if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+  }
+
+  function playChime(freq = 880, duration = 0.7, type = "sine", vol = 0.14) {
+    if (!audioCtx) return;
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, now);
+    osc.frequency.exponentialRampToValueAtTime(Math.max(freq * 1.4, 1), now + duration * 0.5);
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(vol, now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + duration + 0.1);
+  }
+
+  function playChord(freqs, duration = 1.4, vol = 0.09) {
+    freqs.forEach((f) => playChime(f, duration, "sine", vol));
+  }
+
+  function toggleAmbient() {
+    ensureAudio();
+    if (!audioCtx) return;
+    ambientOn = !ambientOn;
+    ambientOn ? startAmbient() : stopAmbient();
+    ambientIcon.style.opacity = ambientOn ? "1" : "0.6";
+    ambientBtn.classList.toggle("text-cyan", ambientOn);
+    ambientBtn.classList.toggle("animate-pulse-slow", ambientOn);
+  }
+
+  function startAmbient() {
+    const now = audioCtx.currentTime;
+    const master = audioCtx.createGain();
+    master.gain.setValueAtTime(0, now);
+    master.gain.linearRampToValueAtTime(0.055, now + 2);
+    master.connect(audioCtx.destination);
+    const freqs = [196.0, 246.94, 293.66];
+    const oscs = freqs.map((f) => {
+      const o = audioCtx.createOscillator();
+      o.type = "sine";
+      o.frequency.value = f;
+      const g = audioCtx.createGain();
+      g.gain.value = 0.5;
+      o.connect(g).connect(master);
+      o.start();
+      return { o, g };
+    });
+    const lfo = audioCtx.createOscillator();
+    lfo.frequency.value = 0.06;
+    const lfoGain = audioCtx.createGain();
+    lfoGain.gain.value = 0.02;
+    lfo.connect(lfoGain).connect(master.gain);
+    lfo.start();
+    ambientNodes = { master, oscs, lfo };
+  }
+
+  function stopAmbient() {
+    if (!ambientNodes) return;
+    const now = audioCtx.currentTime;
+    const nodes = ambientNodes;
+    nodes.master.gain.cancelScheduledValues(now);
+    nodes.master.gain.setValueAtTime(nodes.master.gain.value, now);
+    nodes.master.gain.linearRampToValueAtTime(0, now + 1.3);
+    setTimeout(() => {
+      nodes.oscs.forEach(({ o }) => { try { o.stop(); } catch (e) {} });
+      try { nodes.lfo.stop(); } catch (e) {}
+    }, 1400);
+    ambientNodes = null;
+  }
+
+  /* ---------------------------------------------------------
+     PARTICLES
+  --------------------------------------------------------- */
+  class Particle {
+    constructor(x, y, type = "star") {
+      this.x = x; this.y = y;
+      this.destX = x; this.destY = y;
+      this.vx = (Math.random() - 0.5) * 0.5;
+      this.vy = (Math.random() - 0.5) * 0.5;
+      this.size = Math.random() * (isMobile ? 1.5 : 2) + 0.5;
+      this.color = config.colors[Math.floor(Math.random() * config.colors.length)];
+      this.alpha = Math.random();
+      this.type = type;
+    }
+    draw() {
+      ctx.globalAlpha = this.alpha;
+      ctx.fillStyle = this.color;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      ctx.fill();
+      if (!isMobile && this.size > 1.5) {
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = this.color;
+      } else {
+        ctx.shadowBlur = 0;
+      }
+    }
+    update() {
